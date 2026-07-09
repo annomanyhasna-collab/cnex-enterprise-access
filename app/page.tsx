@@ -5,29 +5,20 @@ import Link from 'next/link'
 
 export default function EnterpriseAccessForm() {
   const [step, setStep] = useState(1)
+  const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
-    fullName: '',
-    workEmail: '',
-    companyName: '',
-    role: '',
-    companyType: '',
-    capacity: '',
-    timeline: '',
-    workload: '',
-    region: '',
-    nda: ''
+    fullName: '', workEmail: '', companyName: '', role: '',
+    companyType: '', capacity: '', timeline: '', workload: '', region: '', nda: ''
   })
   
   const [agreements, setAgreements] = useState({
     chk1: false, chk2: false, chk3: false, chk4: false, chk5: false
   })
 
-  // Handle Input Changes
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
   }
 
-  // Business Email Validation (Blocks gmail, hotmail, yahoo)
   const isBusinessEmail = (email) => {
     if (!email) return false;
     const lowerEmail = email.toLowerCase();
@@ -35,17 +26,33 @@ export default function EnterpriseAccessForm() {
     return !blockedDomains.some(domain => lowerEmail.includes(domain)) && lowerEmail.includes('@') && lowerEmail.includes('.');
   }
 
-  // Check if Step 1 is fully filled
-  const isStep1Valid = 
-    Object.values(formData).every(val => val.trim() !== '') && 
-    isBusinessEmail(formData.workEmail);
-
-  // Check if Step 2 is fully checked
+  const isStep1Valid = Object.values(formData).every(val => val.trim() !== '') && isBusinessEmail(formData.workEmail);
   const isStep2Valid = Object.values(agreements).every(val => val === true);
+
+  // --- NEW: HubSpot Submission Logic ---
+  const handleNextStep = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/hubspot', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      
+      if (res.ok) {
+        setStep(2); // Move to step 2 only if HubSpot succeeds
+      } else {
+        alert("There was an issue saving your details. Please try again.");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Network error. Please try again.");
+    }
+    setIsLoading(false);
+  }
 
   return (
     <div className="min-h-screen bg-[#2b3a2a] text-white p-8 md:p-16 font-sans flex flex-col">
-      {/* HEADER: Logo & Close Button */}
       <div className="flex justify-between items-center mb-16">
         <Link href="https://cambridgenexus.com/">
           <svg width="210" height="27" viewBox="0 0 210 27" fill="none" xmlns="http://www.w3.org/2000/svg" className="cursor-pointer">
@@ -149,11 +156,11 @@ export default function EnterpriseAccessForm() {
 
               <div className="col-span-1 md:col-span-2 mt-8 pt-8 border-t border-gray-600">
                 <button 
-                  onClick={() => setStep(2)} 
-                  disabled={!isStep1Valid}
-                  className={`flex items-center justify-between w-full text-2xl font-semibold transition ${isStep1Valid ? 'text-green-500 cursor-pointer' : 'text-gray-500 cursor-not-allowed opacity-50'}`}
+                  onClick={handleNextStep} 
+                  disabled={!isStep1Valid || isLoading}
+                  className={`flex items-center justify-between w-full text-2xl font-semibold transition ${isStep1Valid && !isLoading ? 'text-green-500 cursor-pointer' : 'text-gray-500 cursor-not-allowed opacity-50'}`}
                 >
-                  Next Step <span>↗</span>
+                  {isLoading ? 'Saving...' : 'Next Step'} <span>↗</span>
                 </button>
               </div>
             </div>

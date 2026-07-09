@@ -187,7 +187,7 @@ export default function EnterpriseAccessForm() {
               <div className="mt-8 pt-8 border-t border-gray-600">
                 <button 
                   disabled={!isStep2Valid}
-                  onClick={() => alert("Ready for Dropbox Sign API!")}
+                  onClick={() => window.location.href = "https://app.hellosign.com/s/IK0g3pIS"}
                   className={`flex items-center justify-between w-full text-2xl font-semibold transition ${isStep2Valid ? 'text-white cursor-pointer hover:text-green-500' : 'text-gray-500 cursor-not-allowed opacity-50'}`}
                 >
                   REVIEW & SIGN DOCU <span>↗</span>
